@@ -11,6 +11,7 @@ import {
   MistralAIEmbeddingModelType,
   OpenAI,
   OpenAIEmbedding,
+  OpenAILike,
   Settings,
 } from "llamaindex";
 import { HuggingFaceEmbedding } from "llamaindex/embeddings/HuggingFaceEmbedding";
@@ -48,6 +49,9 @@ export const initSettings = async () => {
     case "azure-openai":
       initAzureOpenAI();
       break;
+    case "ml-gateway":
+      initMLGateway();
+      break;
     default:
       initOpenAI();
       break;
@@ -68,6 +72,31 @@ function initOpenAI() {
     dimensions: process.env.EMBEDDING_DIM
       ? parseInt(process.env.EMBEDDING_DIM)
       : undefined,
+  });
+}
+
+function initMLGateway() {
+  const config = {
+    apiKey: process.env.ROS_ML_GATEWAY_KEY,
+    basePath: process.env.ROS_ML_GATEWAY_URL,
+  };
+
+  Settings.llm = new OpenAILike({
+    model: process.env.MODEL ?? "gpt-4o-mini",
+    maxTokens: process.env.LLM_MAX_TOKENS
+      ? Number(process.env.LLM_MAX_TOKENS)
+      : undefined,
+    apiKey: config.apiKey,
+    basePath: config.basePath,
+  });
+
+  Settings.embedModel = new OpenAILike({
+    model: process.env.EMBEDDING_MODEL,
+    dimensions: process.env.EMBEDDING_DIM
+      ? parseInt(process.env.EMBEDDING_DIM)
+      : undefined,
+    apiKey: config.apiKey,
+    basePath: config.basePath,
   });
 }
 
